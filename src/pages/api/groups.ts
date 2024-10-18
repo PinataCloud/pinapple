@@ -80,7 +80,7 @@ export default async function handler(
           token = groupsData.next_page_token
         }
       }      
-      res.json({ data: allGroups })
+      res.json({ data: allGroups.filter((g) => g.name.includes(userId)) })
     } catch (error) {
       console.log(error);
       res.status(500).send("Server error")

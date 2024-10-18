@@ -73,8 +73,7 @@ export default async function handler(
         console.log(filesData.next_page_token)
       }
       const filteredFiles = !groupId ? allFiles.filter((f: any) => f.group_id === null) : allFiles;
-      console.log(filteredFiles)
-      return res.json({ data: filteredFiles })
+      return res.json({ data: filteredFiles.filter((f) => f.name.includes(userId)) })
     } catch (error) {
       console.log(error);
       res.status(500).send("Server error")

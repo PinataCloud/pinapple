@@ -14,7 +14,7 @@ type FoldersProps = {
 }
 
 const Files = (props: FoldersProps) => {
-  const { handleDragStart, files, visibleMenuId, setVisibleMenuId, setFile, deleteFile } = props;
+  const { handleDragStart, files, visibleMenuId, setVisibleMenuId, setFile, deleteFile } = props;  
 
   const handleContextMenu = (e: any, id: string) => {
     e.preventDefault()
@@ -25,6 +25,8 @@ const Files = (props: FoldersProps) => {
     setVisibleMenuId("")
     await deleteFile(id)
   }
+
+  console.log(files)
 
   return (
     <div>
@@ -47,7 +49,7 @@ const Files = (props: FoldersProps) => {
           {f.mimeType?.includes("video") ? 
             <VideoFile /> : <File />
           }          
-          <p className="text-center text-ellipsis overflow-hidden">{f.name}</p>
+          <p className="text-center text-ellipsis overflow-hidden">{f.name.split("+")[1]}</p>
         </div>
       ))}
     </div>

@@ -10,6 +10,7 @@ import LoaderDialog from './LoaderDialog';
 import FileDialog from './FileDialog';
 import { group } from 'console';
 import AboutDialog from './AboutDialog';
+import { useUser } from '@clerk/nextjs';
 
 export type ItemType = {
   id: string;
@@ -35,6 +36,7 @@ const Desktop = () => {
   const [draggedOverFolderId, setDraggedOverFolderId] = useState<string | null>(null);
   const [aboutDialog, setAboutDialog] = useState(false);
 
+  const { user } = useUser();
   const fileRef: any = useRef();
 
   useEffect(() => {
@@ -290,6 +292,7 @@ const Desktop = () => {
     try {
       setLoader(true);
       const file = e.target.files[0];
+      console.log(file);
       if(groupId || folder) {
         const id = groupId ? groupId : folder?.id;
         await handleUpload(file, id);
@@ -307,7 +310,7 @@ const Desktop = () => {
     }
   }
 
-  const handleUpload = async (file: any, groupId?: string) => {
+  const handleUpload = async (fileData: any, groupId?: string) => {
     try {
       const keyRes = await fetch("/api/files", {
         method: "POST"
@@ -318,10 +321,11 @@ const Desktop = () => {
       // Upload from the client
       if(groupId) {
         console.log("Uploading to group")
-        await pinata.upload.file(file).addMetadata({ name: file.filename }).group(groupId).key(key)
+        await pinata.upload.file(fileData).addMetadata({ name: `${user?.id}+${fileData.name}` }).group(groupId).key(key)
       } else {
         console.log("Not uploading to group")
-        await pinata.upload.file(file).addMetadata({ name: file.filename }).key(key)
+        console.log(`${user?.id}+${fileData.name}`)
+        await pinata.upload.file(fileData).addMetadata({ name: `${user?.id}+${fileData.name}` }).key(key)
       }
     } catch (error) {
       throw error;
