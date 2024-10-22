@@ -53,7 +53,7 @@ const FileDialog = (props: FileDialogProps) => {
       <div className="window scale-down min-w-[30rem] min-h-[30rem]">
         <div className="title-bar">
           <button aria-label="Close" onClick={() => closeDialog()} className="close"></button>
-          <h1 className="title">{item?.name}</h1>
+          <h1 className="title">{item?.name.split("+")[1]}</h1>
           <button aria-label="Resize" disabled className="hidden"></button>
         </div>
         <div className="separator"></div>

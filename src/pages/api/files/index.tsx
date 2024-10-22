@@ -52,16 +52,17 @@ export default async function handler(
         let filesData;
         if (token && groupId) {
           console.log("Token and group id")
-          filesData = await pinata.files.list().group(groupId as string).pageToken(token)
+          filesData = await pinata.files.list().group(groupId as string).metadata({ userId: userId }).pageToken(token)
         } else if(token) {
           console.log("Token time")
-          filesData = await pinata.files.list().pageToken(token)
+          filesData = await pinata.files.list().metadata({ userId: userId }).pageToken(token)
         } else if (groupId) {
           console.log("group id")
-          filesData = await pinata.files.list().group(groupId as string)
+          filesData = await pinata.files.list().group(groupId as string).metadata({ userId: userId })
         } else {
           console.log("No token")
-          filesData = await pinata.files.list()
+          console.log(userId)
+          filesData = await pinata.files.list().metadata({ userId: userId })
         }
 
         allFiles = [...filesData.files, ...allFiles]
@@ -73,7 +74,7 @@ export default async function handler(
         console.log(filesData.next_page_token)
       }
       const filteredFiles = !groupId ? allFiles.filter((f: any) => f.group_id === null) : allFiles;
-      return res.json({ data: filteredFiles.filter((f) => f.name.includes(userId)) })
+      return res.json({ data: filteredFiles })
     } catch (error) {
       console.log(error);
       res.status(500).send("Server error")

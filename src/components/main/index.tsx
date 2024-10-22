@@ -211,7 +211,7 @@ const Desktop = () => {
   }
 
   const deleteFile = async (id: string) => {
-    await fetch(`/api/files?fileId=${id}`, {
+    await fetch(`/api/files/${id}`, {
       method: "DELETE"
     })
 
@@ -282,9 +282,11 @@ const Desktop = () => {
     });
 
     if (groupId) {
+      console.log("Setting files in group")
       setFilesInGroup(filesData)
     } else {
-      setFiles(filesData);
+      console.log("Setting files")
+      setFiles(filesData);      
     }
   };
 
@@ -292,13 +294,15 @@ const Desktop = () => {
     try {
       setLoader(true);
       const file = e.target.files[0];
-      console.log(file);
+
       if(groupId || folder) {
+        console.log("Loading from group")
         const id = groupId ? groupId : folder?.id;
         await handleUpload(file, id);
         loadFiles(id);
       } else {
         await handleUpload(file);
+        console.log("loading normal")
         loadFiles();
       }
       setLoader(false);
@@ -321,14 +325,37 @@ const Desktop = () => {
       // Upload from the client
       if(groupId) {
         console.log("Uploading to group")
-        await pinata.upload.file(fileData).addMetadata({ name: `${user?.id}+${fileData.name}` }).group(groupId).key(key)
+        await pinata.upload.file(fileData).addMetadata({ name: `${user?.id}+${fileData.name}`, keyvalues: {
+          userId: user?.id || ""
+        } }).group(groupId).key(key)
       } else {
         console.log("Not uploading to group")
         console.log(`${user?.id}+${fileData.name}`)
-        await pinata.upload.file(fileData).addMetadata({ name: `${user?.id}+${fileData.name}` }).key(key)
+        await pinata.upload.file(fileData).addMetadata({ name: `${user?.id}+${fileData.name}`, keyvalues: {
+          userId: user?.id || ""
+        } }).key(key)
       }
     } catch (error) {
       throw error;
+    }
+  }
+
+  const updateFileName = async (file: ItemType, newName: string, groupId?: string) => {
+    await fetch(`/api/files/${file.id}`, {
+      method: "PUT", 
+      headers: {
+        'Content-Type': 'application/json'
+      }, 
+      body: JSON.stringify({
+        newName: newName
+      })
+    })
+
+    if(groupId || folder) {
+      const id = groupId ? groupId : folder?.id;
+      loadFiles(id);
+    } else {
+      loadFiles();
     }
   }
 
@@ -341,14 +368,14 @@ const Desktop = () => {
           handleDragStart={(e: any) => handleDragStart(e, 'help')}
           style={{ left: `${helpWindowPosition.x}px`, top: `${helpWindowPosition.y}px` }}
         />
-        <Files deleteFile={deleteFile} setFile={setFile} visibleMenuId={visibleMenuId} setVisibleMenuId={setVisibleMenuId} handleDragStart={handleDragStart} files={files} />
+        <Files updateFileName={updateFileName} deleteFile={deleteFile} setFile={setFile} visibleMenuId={visibleMenuId} setVisibleMenuId={setVisibleMenuId} handleDragStart={handleDragStart} files={files} />
         <Folders handleDragEnterFolder={handleDragEnterFolder} handleDragLeaveFolder={handleDragLeaveFolder} setFolder={setFolder} visibleMenuId={visibleMenuId} setVisibleMenuId={setVisibleMenuId} deleteFolder={deleteFolder} handleDragStart={handleDragStart} folders={groups} />
         {createNewFolderDialog &&
           <NewGroupDialog createNewGroup={createNewGroup} groupName={groupName} setGroupName={setGroupName} setCreateNewFolderDialog={setCreateNewFolderDialog} />
         }
         {
           folder &&
-          <FolderDialog setFile={setFile} visibleMenuId={visibleMenuId} setVisibleMenuId={setVisibleMenuId} handleDragStart={handleDragStart} deleteFile={deleteFile} filesInGroup={filesInGroup} item={folder} setItem={setFolder} setFilesInGroup={setFilesInGroup} handleUpload={handleUpload} loadFiles={loadFiles} />
+          <FolderDialog updateFileName={updateFileName} setFile={setFile} visibleMenuId={visibleMenuId} setVisibleMenuId={setVisibleMenuId} handleDragStart={handleDragStart} deleteFile={deleteFile} filesInGroup={filesInGroup} item={folder} setItem={setFolder} setFilesInGroup={setFilesInGroup} handleUpload={handleUpload} loadFiles={loadFiles} />
         }
         {
           file &&

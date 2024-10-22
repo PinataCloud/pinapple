@@ -16,10 +16,11 @@ type FolderDialogProps = {
   setVisibleMenuId: Function;
   handleDragStart: Function;
   setFile: Function;
+  updateFileName: Function;
 }
 
 const FolderDialog = (props: FolderDialogProps) => {
-  const { handleDragStart, setVisibleMenuId, visibleMenuId, deleteFile, item, setItem, handleUpload, loadFiles, setFilesInGroup, filesInGroup, setFile } = props;
+  const { handleDragStart, setVisibleMenuId, visibleMenuId, deleteFile, item, setItem, handleUpload, loadFiles, setFilesInGroup, filesInGroup, setFile, updateFileName } = props;
   const [loader, setLoader] = useState(false);
   useEffect(() => {
     if (item) {
@@ -83,7 +84,7 @@ const FolderDialog = (props: FolderDialogProps) => {
         <div className="separator"></div>
 
         <div className="modeless-dialog">
-          <Files deleteFile={deleteFile} setFile={setFile} visibleMenuId={visibleMenuId} setVisibleMenuId={setVisibleMenuId} handleDragStart={handleDragStart} files={filesInGroup} />
+          <Files updateFileName={updateFileName} deleteFile={deleteFile} setFile={setFile} visibleMenuId={visibleMenuId} setVisibleMenuId={setVisibleMenuId} handleDragStart={handleDragStart} files={filesInGroup} />
         </div>        
       </div>
     </div>
