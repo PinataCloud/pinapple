@@ -1,6 +1,9 @@
 import { getAuth } from '@clerk/nextjs/server'
 import { pinata } from "@/pinata";
 import type { NextApiRequest, NextApiResponse } from "next";
+import { getTestUser } from '@/middleware';
+
+export const dynamic = 'force-dynamic';
 
 export default async function handler(
   req: NextApiRequest,
@@ -8,10 +11,16 @@ export default async function handler(
 ) {
   if (req.method === "GET") {
     try {
-      const { userId } = getAuth(req)
+      let { userId } = getAuth(req)
 
       if (!userId) {
-        return res.status(401).json({ error: 'Not authenticated' })
+        //  check if local test user
+        const testUser = await getTestUser(req.headers.authorization?.split("Bearer ")[1] || "")
+        if(!testUser) {
+          return res.status(401).json({ error: 'Not authenticated' })
+        } else {
+          userId = req.headers.authorization?.split("Bearer ")[1] as string
+        }     
       }
 
       if(!req.query.cid) {

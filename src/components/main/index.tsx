@@ -11,6 +11,7 @@ import FileDialog from './FileDialog';
 import { group } from 'console';
 import AboutDialog from './AboutDialog';
 import { useUser } from '@clerk/nextjs';
+import { getLocalUserId } from '@/pages';
 
 export type ItemType = {
   id: string;
@@ -35,6 +36,7 @@ const Desktop = () => {
   const [loader, setLoader] = useState(false);
   const [draggedOverFolderId, setDraggedOverFolderId] = useState<string | null>(null);
   const [aboutDialog, setAboutDialog] = useState(false);
+  const [draggedFileId, setDraggedFileId] = useState("");
 
   const { user } = useUser();
   const fileRef: any = useRef();
@@ -66,7 +68,8 @@ const Desktop = () => {
     }
   };
 
-  const handleDragStart = (event: React.DragEvent, id: number | 'help') => {
+  const handleDragStart = (event: React.DragEvent, id: string | 'help') => {
+    setDraggedFileId(id);
     const { clientX, clientY } = event;
     event.dataTransfer.setData("text/plain", JSON.stringify({ clientX, clientY, id }));
   };
@@ -74,6 +77,7 @@ const Desktop = () => {
   const handleDrop = async (event: any) => {
     event.preventDefault();
     if(folder) {
+      setDraggedFileId("");
       return;
     }
     const files = [];
@@ -88,12 +92,14 @@ const Desktop = () => {
         await handleUpload(files[0])
         loadFiles();
         setLoader(false);
+        setDraggedFileId("");
         return;
     }
 
     if (draggedOverFolderId) {
       // Here you can handle the file upload to this specific folder
-      await handleAddToFolder(files[0], draggedOverFolderId);
+      await handleAddToFolder(draggedFileId, draggedOverFolderId);
+      setDraggedFileId("");
       document.getElementById(draggedOverFolderId)?.classList.remove("bg-[#eee]")
       return;
     }
@@ -174,11 +180,15 @@ const Desktop = () => {
   }
 
   const handleAddToFolder = async (fileId: string, folderId: string) => {
+    let headers: any = {
+      'Content-Type': 'application/json'
+    }
+    if(!user?.id) {
+      headers.authorization = `Bearer ${getLocalUserId()}`
+    }
     await fetch(`/api/groups`, {
       method: "PUT", 
-      headers: {
-        'Content-Type': 'application/json'
-      }, 
+      headers: headers, 
       body: JSON.stringify({
         fileId, 
         folderId
@@ -189,11 +199,15 @@ const Desktop = () => {
   }
 
   const createNewGroup = async () => {
+    let headers: any = {
+      'Content-Type': 'application/json'
+    }
+    if(!user?.id) {
+      headers.authorization = `Bearer ${getLocalUserId()}`
+    }
     await fetch("/api/groups", {
       method: "POST",
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: headers,
       body: JSON.stringify({
         groupName: groupName
       })
@@ -204,15 +218,29 @@ const Desktop = () => {
   };
 
   const deleteFolder = async (id: string) => {
+    let headers: any = {
+      'Content-Type': 'application/json'
+    }
+    if(!user?.id) {
+      headers.authorization = `Bearer ${getLocalUserId()}`
+    }
     await fetch(`/api/groups?groupId=${id}`, {
-      method: "DELETE"
+      method: "DELETE", 
+      headers
     })
     loadGroups()
   }
 
   const deleteFile = async (id: string) => {
+    let headers: any = {
+      'Content-Type': 'application/json'
+    }
+    if(!user?.id) {
+      headers.authorization = `Bearer ${getLocalUserId()}`
+    }
     await fetch(`/api/files/${id}`, {
-      method: "DELETE"
+      method: "DELETE", 
+      headers
     })
 
     if(folder) {
@@ -242,7 +270,13 @@ const Desktop = () => {
   }
 
   const loadGroups = async () => {
-    const groupsRes = await fetch("/api/groups");
+    let headers: any = {
+      'Content-Type': 'application/json'
+    }
+    if(!user?.id) {
+      headers.authorization = `Bearer ${getLocalUserId()}`
+    }
+    const groupsRes = await fetch("/api/groups", { headers });
     const data = await groupsRes.json();
     const groupsToUse = data.data;
 
@@ -264,7 +298,14 @@ const Desktop = () => {
       url = url + `?groupId=${groupId}`
     }
 
-    const filesRes = await fetch(url);
+    let headers: any = {
+      'Content-Type': 'application/json'
+    }
+    if(!user?.id) {
+      headers.authorization = `Bearer ${getLocalUserId()}`
+    }
+
+    const filesRes = await fetch(url, { headers });
     const data = await filesRes.json();
     const filesToUse = data.data;
 
@@ -316,8 +357,15 @@ const Desktop = () => {
 
   const handleUpload = async (fileData: any, groupId?: string) => {
     try {
+      let headers: any = {
+        'Content-Type': 'application/json'
+      }
+      if(!user?.id) {
+        headers.authorization = `Bearer ${getLocalUserId()}`
+      }
       const keyRes = await fetch("/api/files", {
-        method: "POST"
+        method: "POST", 
+        headers 
       })
 
       const keyData = await keyRes.json()
@@ -326,13 +374,15 @@ const Desktop = () => {
       if(groupId) {
         console.log("Uploading to group")
         await pinata.upload.file(fileData).addMetadata({ name: `${user?.id}+${fileData.name}`, keyvalues: {
-          userId: user?.id || ""
+          userId: user?.id || getLocalUserId() || "", 
+          testUser: user?.id ? "false" : "true"
         } }).group(groupId).key(key)
       } else {
         console.log("Not uploading to group")
         console.log(`${user?.id}+${fileData.name}`)
         await pinata.upload.file(fileData).addMetadata({ name: `${user?.id}+${fileData.name}`, keyvalues: {
-          userId: user?.id || ""
+          userId: user?.id || getLocalUserId() || "", 
+          testUser: user?.id ? "false" : "true"
         } }).key(key)
       }
     } catch (error) {
@@ -341,11 +391,15 @@ const Desktop = () => {
   }
 
   const updateFileName = async (file: ItemType, newName: string, groupId?: string) => {
+    let headers: any = {
+      'Content-Type': 'application/json'
+    }
+    if(!user?.id) {
+      headers.authorization = `Bearer ${getLocalUserId()}`
+    }
     await fetch(`/api/files/${file.id}`, {
       method: "PUT", 
-      headers: {
-        'Content-Type': 'application/json'
-      }, 
+      headers: headers, 
       body: JSON.stringify({
         newName: newName
       })

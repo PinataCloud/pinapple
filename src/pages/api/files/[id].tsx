@@ -1,6 +1,7 @@
 import { getAuth } from '@clerk/nextjs/server'
 import { pinata } from "@/pinata";
 import type { NextApiRequest, NextApiResponse } from "next";
+import { getTestUser } from '@/middleware';
 
 export default async function handler(
   req: NextApiRequest,
@@ -9,10 +10,16 @@ export default async function handler(
   if (req.method === "PUT") {
     try {
       const { id } = req.query
-      const { userId } = getAuth(req)
+      let { userId } = getAuth(req)
 
       if (!userId) {
-        return res.status(401).json({ error: 'Not authenticated' })
+        //  check if local test user
+        const testUser = await getTestUser(req.headers.authorization?.split("Bearer ")[1] || "")
+        if(!testUser) {
+          return res.status(401).json({ error: 'Not authenticated' })
+        } else {
+          userId = req.headers.authorization?.split("Bearer ")[1] as string
+        }     
       }
 
       await pinata.files.update({ id: id as string, name: `${userId}+${req.body.newName}` })
@@ -25,11 +32,14 @@ export default async function handler(
   } else if(req.method === "DELETE") {
     try {
       const { id } = req.query
-      const { userId } = getAuth(req)
+      let { userId } = getAuth(req)
 
-      if (!userId) {
+      const testUser = await getTestUser(req.headers.authorization?.split("Bearer ")[1] || "")
+      if(!testUser) {
         return res.status(401).json({ error: 'Not authenticated' })
-      }
+      } else {
+        userId = req.headers.authorization?.split("Bearer ")[1] as string
+      }  
 
       await pinata.files.delete([id as string])
       res.send("Success")

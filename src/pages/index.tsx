@@ -5,17 +5,48 @@ import SignUpForm from "@/components/sign-up";
 import { useUser } from "@clerk/nextjs";
 import Head from "next/head";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { v4 as uuidv4 } from 'uuid';
 
+export const LOCAL_TEST_USER = 'pinapple-local-user'
+
+export const getLocalUserId = () => {
+  return localStorage.getItem(LOCAL_TEST_USER);
+}
 
 export default function Home() {
   const [showSignIn, setShowSignIn] = useState(true);
+  const [localAuth, setLocalAuth] = useState(false);
+
   const { isSignedIn, user, isLoaded } = useUser()
+  
+  useEffect(() => {
+    const localTestAuth = localStorage.getItem(LOCAL_TEST_USER)
+    if(localTestAuth) {
+      setLocalAuth(true)
+    }
+  }, [])
+
+  const createLocalUser = async () => {
+    //  Generate UUID
+    const uuid = uuidv4();
+    await fetch(`/api/users`, {
+      method: "POST", 
+      headers: {
+        'Content-Type': 'application/json'
+      }, 
+      body: JSON.stringify({
+        userId: uuid
+      })
+    })
+    localStorage.setItem(LOCAL_TEST_USER, uuid)
+    setLocalAuth(true);
+  }
 
   return (
     <>
       {
-        isSignedIn ?
+        isSignedIn || localAuth ?
           <div>            
             <Desktop />
           </div> :
@@ -31,6 +62,7 @@ export default function Home() {
                 <div aria-label="link" className="cursor-pointer mt-4 underline" onClick={() => setShowSignIn(!showSignIn)}>Already have a user profile for this machine?</div>
               </div>
             }
+            <div aria-label="link" className="cursor-pointer mt-4 underline" onClick={createLocalUser}>Use machine as a guest</div>
           </div>
       }
     </>

@@ -1,6 +1,7 @@
-import { useAuth } from '@clerk/nextjs'
+import { useAuth, useUser } from '@clerk/nextjs'
 import React from 'react'
 import { ItemType } from '../main';
+import { LOCAL_TEST_USER } from '@/pages';
 
 type MenuProps = {
   newFolder: Function;
@@ -12,6 +13,16 @@ type MenuProps = {
 const Menu = (props: MenuProps) => {
   const { newFolder, handleSelectFile, folder, arrangeFiles, setAboutDialog } = props;
   const { signOut } = useAuth()
+  const { user } = useUser();
+
+  const signUserOut = () => {
+    if(user?.id) {
+      signOut()
+    } else {
+      localStorage.removeItem(LOCAL_TEST_USER)
+      window.location.reload();
+    }
+  }
   return (
     <ul role="menu-bar">
       <li role="menu-item" tabIndex={0} aria-haspopup="true">
@@ -26,7 +37,7 @@ const Menu = (props: MenuProps) => {
           <li role="menu-item"><a onClick={() => handleSelectFile()} href="#menu">New file {folder && "in folder"}</a></li>
           {!folder && <li role="menu-item"><a onClick={() => newFolder(true)} href="#menu">New folder</a></li>}
           <li role="menu-item" className="divider"></li>
-          <li role="menu-item"><a onClick={() => signOut()} href="#">Sign out</a></li>
+          <li role="menu-item"><a onClick={() => signUserOut()} href="#">Sign out</a></li>
         </ul>
       </li>
       <li role="menu-item" tabIndex={0} aria-haspopup="true">

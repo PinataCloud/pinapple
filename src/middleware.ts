@@ -1,4 +1,5 @@
 import { clerkMiddleware } from '@clerk/nextjs/server'
+import { pinata } from './pinata'
 
 export default clerkMiddleware()
 
@@ -9,4 +10,13 @@ export const config = {
     // Always run for API routes
     '/(api|trpc)(.*)',
   ],
+}
+
+export const getTestUser = async (userId: string) => {
+  let users: any = await pinata.files.list().metadata({ localUser: userId });
+  if(!users || !users.files || users.files.length === 0) {
+    return false;
+  }
+
+  return true;
 }

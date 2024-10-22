@@ -3,6 +3,8 @@ import { ItemType } from '.';
 import mime from 'mime';
 import Image from './Image';
 import Video from './Video';
+import { useUser } from '@clerk/nextjs';
+import { getLocalUserId } from '@/pages';
 
 type FileDialogProps = {
   item: ItemType | null;
@@ -12,6 +14,7 @@ type FileDialogProps = {
 const FileDialog = (props: FileDialogProps) => {
   const { item, setItem } = props;
   const [url, setUrl] = useState("")
+  const { user } = useUser();
 
   useEffect(() => {
     if (item) {
@@ -20,7 +23,13 @@ const FileDialog = (props: FileDialogProps) => {
   }, [item]);
 
   const loadFile = async () => {
-    const res = await fetch(`/api/url?cid=${item?.cid}`)
+    let headers: any = {
+      'Content-Type': 'application/json'
+    }
+    if(!user?.id) {
+      headers.authorization = `Bearer ${getLocalUserId()}`
+    }
+    const res = await fetch(`/api/url?cid=${item?.cid}`, { headers })
     const data = await res.json()
     const url = data.data;
     setUrl(url)

@@ -1,6 +1,9 @@
 import { getAuth } from '@clerk/nextjs/server'
 import { pinata } from "@/pinata";
 import type { NextApiRequest, NextApiResponse } from "next";
+import { getTestUser } from '@/middleware';
+
+export const dynamic = 'force-dynamic';
 
 export default async function handler(
   req: NextApiRequest,
@@ -8,10 +11,16 @@ export default async function handler(
 ) {
   if (req.method === "POST") {
     try {
-      const { userId } = getAuth(req)
+      let { userId } = getAuth(req)
 
       if (!userId) {
-        return res.status(401).json({ error: 'Not authenticated' })
+        //  check if local test user
+        const testUser = await getTestUser(req.headers.authorization?.split("Bearer ")[1] || "")
+        if(!testUser) {
+          return res.status(401).json({ error: 'Not authenticated' })
+        } else {
+          userId = req.headers.authorization?.split("Bearer ")[1] as string
+        }     
       }
 
       const keyData = await pinata.keys.create({ keyName: `${userId}+${Date.now()}`, permissions: { admin: true }, maxUses: 1 })
@@ -24,10 +33,16 @@ export default async function handler(
   } else if(req.method === "DELETE") {
     try {
       const { fileId } = req.query
-      const { userId } = getAuth(req)
+      let { userId } = getAuth(req)
 
       if (!userId) {
-        return res.status(401).json({ error: 'Not authenticated' })
+        //  check if local test user
+        const testUser = await getTestUser(req.headers.authorization?.split("Bearer ")[1] || "")
+        if(!testUser) {
+          return res.status(401).json({ error: 'Not authenticated' })
+        } else {
+          userId = req.headers.authorization?.split("Bearer ")[1] as string
+        }     
       }
 
       await pinata.files.delete([fileId as string])
@@ -38,12 +53,18 @@ export default async function handler(
     }
   } else {
     try {
-      const { userId } = getAuth(req)
+      let { userId } = getAuth(req)
       const { groupId } = req.query;
 
       if (!userId) {
-        return res.status(401).json({ error: 'Not authenticated' })
-      }      
+        //  check if local test user
+        const testUser = await getTestUser(req.headers.authorization?.split("Bearer ")[1] || "")
+        if(!testUser) {
+          return res.status(401).json({ error: 'Not authenticated' })
+        } else {
+          userId = req.headers.authorization?.split("Bearer ")[1] as string
+        }     
+      }     
       let hasMore = true;
       let token = ""
       let allFiles: any[] = []
@@ -55,14 +76,14 @@ export default async function handler(
           filesData = await pinata.files.list().group(groupId as string).metadata({ userId: userId }).pageToken(token)
         } else if(token) {
           console.log("Token time")
-          filesData = await pinata.files.list().metadata({ userId: userId }).pageToken(token)
+          filesData = await pinata.files.list().metadata({ userId: userId }).noGroup(true).pageToken(token)
         } else if (groupId) {
           console.log("group id")
           filesData = await pinata.files.list().group(groupId as string).metadata({ userId: userId })
         } else {
           console.log("No token")
           console.log(userId)
-          filesData = await pinata.files.list().metadata({ userId: userId })
+          filesData = await pinata.files.list().metadata({ userId: userId }).noGroup(true)
         }
 
         allFiles = [...filesData.files, ...allFiles]
@@ -73,8 +94,8 @@ export default async function handler(
         }
         console.log(filesData.next_page_token)
       }
-      const filteredFiles = !groupId ? allFiles.filter((f: any) => f.group_id === null) : allFiles;
-      return res.json({ data: filteredFiles })
+
+      return res.json({ data: allFiles })
     } catch (error) {
       console.log(error);
       res.status(500).send("Server error")
