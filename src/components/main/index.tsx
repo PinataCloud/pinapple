@@ -12,6 +12,7 @@ import { group } from 'console';
 import AboutDialog from './AboutDialog';
 import { useUser } from '@clerk/nextjs';
 import { getLocalUserId } from '@/pages';
+import GameDialog from './GameDialog';
 
 export type ItemType = {
   id: string;
@@ -36,6 +37,7 @@ const Desktop = () => {
   const [loader, setLoader] = useState(false);
   const [draggedOverFolderId, setDraggedOverFolderId] = useState<string | null>(null);
   const [aboutDialog, setAboutDialog] = useState(false);
+  const [gameDialog, setGameDialogOpen] = useState(false);
   const [draggedFileId, setDraggedFileId] = useState("");
 
   const { user } = useUser();
@@ -51,6 +53,19 @@ const Desktop = () => {
       setFolder(null);
     }
   }, [file]);
+
+  useEffect(() => {
+    //  @ts-ignore
+    window.pinata = () => {
+      setGameDialogOpen(true);
+      console.log('Easter egg activated!');
+    }
+
+    // return () => {
+    //   //  @ts-ignore
+    //   delete window.pinata;
+    // };
+  }, [window]);
 
   const handleSelectFile = () => {
     fileRef?.current?.click()
@@ -323,10 +338,8 @@ const Desktop = () => {
     });
 
     if (groupId) {
-      console.log("Setting files in group")
       setFilesInGroup(filesData)
     } else {
-      console.log("Setting files")
       setFiles(filesData);      
     }
   };
@@ -337,13 +350,11 @@ const Desktop = () => {
       const file = e.target.files[0];
 
       if(groupId || folder) {
-        console.log("Loading from group")
         const id = groupId ? groupId : folder?.id;
         await handleUpload(file, id);
         loadFiles(id);
       } else {
         await handleUpload(file);
-        console.log("loading normal")
         loadFiles();
       }
       setLoader(false);
@@ -372,14 +383,11 @@ const Desktop = () => {
       const key = keyData.data;
       // Upload from the client
       if(groupId) {
-        console.log("Uploading to group")
         await pinata.upload.file(fileData).addMetadata({ name: `${user?.id}+${fileData.name}`, keyvalues: {
           userId: user?.id || getLocalUserId() || "", 
           testUser: user?.id ? "false" : "true"
         } }).group(groupId).key(key)
       } else {
-        console.log("Not uploading to group")
-        console.log(`${user?.id}+${fileData.name}`)
         await pinata.upload.file(fileData).addMetadata({ name: `${user?.id}+${fileData.name}`, keyvalues: {
           userId: user?.id || getLocalUserId() || "", 
           testUser: user?.id ? "false" : "true"
@@ -442,6 +450,10 @@ const Desktop = () => {
         {
           aboutDialog &&
           <AboutDialog setAboutDialog={setAboutDialog} />
+        }
+        {
+          gameDialog && 
+          <GameDialog setGameDialogOpen={setGameDialogOpen} />
         }
       </div>
     </>

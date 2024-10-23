@@ -12,14 +12,15 @@ export default async function handler(
   if (req.method === "POST") {
     try {
       const { groupName } = req.body
-      const { userId } = getAuth(req)
+      let { userId } = getAuth(req)
 
       if (!userId) {
         //  check if local test user
         const testUser = await getTestUser(req.headers.authorization?.split("Bearer ")[1] || "")
         if(!testUser) {
           return res.status(401).json({ error: 'Not authenticated' })
-        }        
+        } 
+        userId = req.headers.authorization?.split("Bearer ")[1] || ""; 
       }
 
       await pinata.groups.create({ name: `${userId}+${groupName}` });
@@ -32,14 +33,15 @@ export default async function handler(
     try {
       const { groupId } = req.query
       console.log(groupId)
-      const { userId } = getAuth(req)
+      let { userId } = getAuth(req)
 
       if (!userId) {
         //  check if local test user
         const testUser = await getTestUser(req.headers.authorization?.split("Bearer ")[1] || "")
         if(!testUser) {
           return res.status(401).json({ error: 'Not authenticated' })
-        }        
+        }   
+        userId = req.headers.authorization?.split("Bearer ")[1] || "";      
       }
 
       await pinata.groups.delete({groupId: groupId as string})
@@ -50,14 +52,15 @@ export default async function handler(
     }
   } else if(req.method === "PUT") { 
     try {
-      const { userId } = getAuth(req)
+      let { userId } = getAuth(req)
 
       if (!userId) {
         //  check if local test user
         const testUser = await getTestUser(req.headers.authorization?.split("Bearer ")[1] || "")
         if(!testUser) {
           return res.status(401).json({ error: 'Not authenticated' })
-        }        
+        }   
+        userId = req.headers.authorization?.split("Bearer ")[1] || "";      
       }
 
       const { fileId, folderId } = req.body;

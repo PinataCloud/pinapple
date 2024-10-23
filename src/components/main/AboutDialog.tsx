@@ -16,6 +16,7 @@ const AboutDialog = (props: AboutDialogProps) => {
         <div className="window-pane">
           <p className="text-center">Pinapple, Version 1.0.0</p>
           <p className="text-center">© {new Date().getFullYear()}<a className="ml-1" href="https://pinata.cloud">Pinata Techonologies, Inc</a></p>
+          <p className="text-center"><a className="ml-1" href="https://github.com/pinatacloud/pinapple">Github</a></p>
         </div>
       </div>
     </div>

@@ -25,6 +25,27 @@ export default function Home() {
     if(localTestAuth) {
       setLocalAuth(true)
     }
+    const logImageToConsole = async (imagePath: string) => {
+      const image = await fetch(imagePath);
+      const imageBlob = await image.blob();
+      const reader = new FileReader();
+
+      reader.onloadend = () => {
+        const base64data = reader.result;
+        
+        console.log(
+          `%c `,
+          `font-size: 1px; padding: 100px; background: url(${base64data}) no-repeat; background-size: contain;`
+        );
+      };
+
+      reader.readAsDataURL(imageBlob);
+      console.log("%cType pinata() and hit enter for some fun.","color: purple; font-size: 20px");
+    };
+
+    // Log the image
+    logImageToConsole("https://cdn-assets-cloud.frontify.com/s3/frontify-cloud-files-us/eyJwYXRoIjoiZnJvbnRpZnlcL2ZpbGVcL01RWjhFQzJBWk5ueXkzWmlRN0xELnBuZyJ9:frontify:TLxHL_j2uiE2Hq40dPtbmIBhb-s2iv8chvNGKpYz9FA?width=2400");
+                                      
   }, [])
 
   const createLocalUser = async () => {

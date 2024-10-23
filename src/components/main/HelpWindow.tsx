@@ -33,7 +33,7 @@ const HelpWindow = (props: HelpWindowProps) => {
 
           <div className="window-pane">
             {!user?.id && 
-              <><p>You are using this machine as a guest user. All file will be deleted every six hours.</p><br /></>
+              <><p>You are using this machine as a guest user. All files will be deleted every six hours.</p><br /></>
             }
             <p>To add files, drag them onto the desktop or open a folder and drag
             them into the folder.</p><br />

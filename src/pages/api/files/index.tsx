@@ -72,17 +72,12 @@ export default async function handler(
       while (hasMore) {
         let filesData;
         if (token && groupId) {
-          console.log("Token and group id")
           filesData = await pinata.files.list().group(groupId as string).metadata({ userId: userId }).pageToken(token)
         } else if(token) {
-          console.log("Token time")
           filesData = await pinata.files.list().metadata({ userId: userId }).noGroup(true).pageToken(token)
         } else if (groupId) {
-          console.log("group id")
           filesData = await pinata.files.list().group(groupId as string).metadata({ userId: userId })
         } else {
-          console.log("No token")
-          console.log(userId)
           filesData = await pinata.files.list().metadata({ userId: userId }).noGroup(true)
         }
 
@@ -92,7 +87,6 @@ export default async function handler(
         } else {
           token = filesData.next_page_token
         }
-        console.log(filesData.next_page_token)
       }
 
       return res.json({ data: allFiles })

@@ -13,6 +13,7 @@ export const config = {
 }
 
 export const getTestUser = async (userId: string) => {
+  console.log(userId)
   let users: any = await pinata.files.list().metadata({ localUser: userId });
   if(!users || !users.files || users.files.length === 0) {
     return false;
